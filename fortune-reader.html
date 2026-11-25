@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Little Fortune...</title>
+<style>
+  /* Shared colored-pencil palette, paper grain, and ink borders. */
+  :root {
+    --paper: #ecdcc0;
+    --cream: #f7ebd1;
+    --blush: #ead1bd;
+    --burgundy: #713c38;
+    --focus: #51624e;
+    --ink: #2d251d;
+    --muted: #604b39;
+    --rule: #a78e6a;
+    --grain: repeating-linear-gradient(117deg, #4b321511 0 1px, transparent 1px 4px);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--grain),
+      radial-gradient(ellipse at 14% 0%, #FFFFFF, transparent 67%),
+      radial-gradient(ellipse at 100% 75%, #c6c4a7, transparent 68%),
+      var(--paper);
+    color: var(--ink);
+    font: 16px/1.5 Bradley Hand, serif;
+  }
+
+  main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(24px, 6vw, 72px);
+  }
+
+  .reading-header { margin-bottom: clamp(22px, 4vw, 40px); padding-bottom: 17px; border-bottom: 1px solid var(--rule); }
+  h1, #title { color: var(--ink); font-weight: 400; }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(46px, 8vw, 88px);
+    line-height: 1;
+    letter-spacing: -.045em;
+  }
+  .intro { max-width: 80ch; margin: 0; font-size: 1.1rem;font-style: italic; }
+  .reading-layout { display: grid; gap: clamp(20px, 4vw, 44px); align-items: start; }
+
+  /* The reader and its three illustrated choice groups. */
+  #reading { min-width: 0; }
+  fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+  legend { padding: 0; font-weight: 700; }
+  label { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; margin-right: 18px; cursor: pointer; }
+  input { margin: 0; accent-color: var(--burgundy); }
+  /* Small tarot frames around the individual choices. */
+  .intention-options label, .zodiac-option, .deck-card {
+    padding: clamp(3px, .6vw, 6px);
+    border: 1.5px solid var(--ink);
+    border-radius: 9px 7px 10px 8px / 7px 10px 8px 10px;
+    background: var(--grain), var(--cream);
+  }
+  .intention-window, .zodiac-window, .deck-art {
+    outline: 1px solid var(--rule);
+    outline-offset: -1px;
+  }
+  .intention-name, .zodiac-name, .deck-caption {
+    letter-spacing: .025em;
+    text-transform: uppercase;
+  }
+
+  /* Illustrated intention choices: Rest, Change, and Clarity. */
+  .intention { margin: 0 0 20px; padding: 0; border: 0; }
+  .intention-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 9px;
+  }
+  .intention-options label {
+    position: relative;
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    margin: 0;
+    text-align: center;
+  }
+  .intention-options input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .intention-window { overflow: hidden; border-radius: 3px; background: var(--paper); }
+  .intention-art {
+    display: block;
+    aspect-ratio: 1;
+    background: var(--paper) url("intention-illustrations.jpg") var(--art-x) center / 300% 100% no-repeat;
+    filter: saturate(.82);
+    animation: zodiac-sway 5.5s var(--delay) ease-in-out infinite;
+  }
+  .intention-name { padding: 4px 0 2px; font-size: .88rem; }
+  .intention-options label:hover .intention-name,
+  .intention-options input:checked ~ .intention-name { background: var(--burgundy); color: var(--cream); }
+  .intention-options label:has(input:checked) { outline: 2px solid var(--burgundy); outline-offset: 1px; }
+  .intention-options label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* Illustrated zodiac radio cards and their moving artwork. */
+  .zodiac-deck { margin: 0 0 22px; padding: 0; border: 0; }
+  .zodiac-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
+  @media (min-width: 440px) {
+    .zodiac-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .zodiac-option {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    margin: 0;
+    gap: 0;
+    text-align: center;
+  }
+  .zodiac-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .zodiac-option:has(input:checked) { outline: 2px solid var(--burgundy); outline-offset: 1px; }
+  .zodiac-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .zodiac-window { overflow: hidden; border-radius: 3px; background: var(--paper); }
+  .zodiac-art {
+    display: block;
+    aspect-ratio: 1;
+    background-image: url("zodiac-illustrations.jpg");
+    background-size: 400% 300%;
+    background-position: var(--art-x) var(--art-y);
+    filter: saturate(.82);
+    animation: zodiac-sway 5.5s var(--delay) ease-in-out infinite;
+  }
+  .zodiac-name {
+    display: grid;
+    place-items: center;
+    padding: 4px 0 2px;
+    font-size: clamp(.68rem, 1.3vw, .85rem);
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+  .zodiac-option:hover .zodiac-name, .zodiac-option input:checked ~ .zodiac-name {
+    background: var(--burgundy); color: var(--cream);
+  }
+  @keyframes zodiac-sway {
+    0%, 100% { transform: scale(1.03) translateY(1%) rotate(-2deg); }
+    50% { transform: scale(1.07) translateY(-2%) rotate(2deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .intention-art, .zodiac-art { animation: none; } }
+
+  #sign-note { max-width: 30ch; margin: 12px 0 0; color: var(--muted); font-style: italic; }
+  #reveal { margin-top: 16px; }
+
+  /* Illustrated symbol cards and their selection states. */
+  .symbol-deck { margin: 17px 0 0; padding: 0; border: 0; }
+  .symbol-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(5px, 1.3vw, 12px);
+    margin-top: 10px;
+  }
+  .symbol-option { position: relative; display: block; min-width: 0; margin: 0; }
+  .symbol-option input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  /* Celestial cards share the paper, ink, and margins of the other picks. */
+  .deck-card {
+    display: block;
+    text-align: center;
+  }
+  .deck-art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: var(--paper);
+  }
+  .deck-number {
+    position: absolute;
+    z-index: 1;
+    inset: 2px auto auto 4px;
+    font-size: .62rem;
+    color: var(--ink);
+  }
+  .deck-planet, #symbol {
+    display: block;
+    background-image: url("celestial-illustrations.jpg");
+    background-size: 200% 200%;
+    background-position: var(--celestial-x, 100%) var(--celestial-y, 100%);
+  }
+  .deck-planet { aspect-ratio: 1; animation: zodiac-sway 5.5s ease-in-out infinite; }
+  .deck-card--moon, #card[data-symbol="Moon"] { --celestial-x: 0%; --celestial-y: 0%; }
+  .deck-card--jupiter, #card[data-symbol="Jupiter"] { --celestial-x: 100%; --celestial-y: 0%; }
+  .deck-card--saturn, #card[data-symbol="Saturn"] { --celestial-x: 0%; --celestial-y: 100%; }
+  .deck-card--jupiter .deck-planet { animation-delay: -.8s; }
+  .deck-card--saturn .deck-planet { animation-delay: -1.6s; }
+  @media (prefers-reduced-motion: reduce) { .deck-planet { animation: none; } }
+  .deck-caption { display: block; padding: 4px 0 2px; font-size: .88rem; }
+  .symbol-option input:checked + .deck-card { outline: 2px solid var(--burgundy); outline-offset: 1px; }
+  .symbol-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .symbol-option:hover .deck-caption,
+  .symbol-option input:checked + .deck-card .deck-caption { background: var(--burgundy); color: var(--cream); }
+
+  button {
+    width: 100%;
+    padding: 12px 22px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: var(--burgundy);
+    color: var(--cream);
+    font: bold 1rem/1.4 Georgia, serif;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #542a26; }
+  button:disabled { background: #ead6c9; color: var(--muted); cursor: default; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  #progress { margin: 9px 0 12px; color: var(--muted); font-size: .9rem; }
+
+  /* The reading is printed inside a larger double-ink tarot frame. */
+  #card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    padding: clamp(30px, 5vw, 52px);
+    border: 3px solid transparent;
+    border-radius: 24px 19px 23px 18px / 19px 24px 18px 23px;
+    text-align: center;
+  }
+  #card.revealing::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 14px 10px 13px 9px;
+    pointer-events: none;
+  }
+  #symbol {
+    width: clamp(92px, 13vw, 125px);
+    aspect-ratio: 1;
+    margin-bottom: 15px;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+  }
+  #title { margin: 0; font-size: clamp(32px, 4.6vw, 54px); line-height: 1.02; }
+  #message { max-width: 29ch; margin: 15px 0 0; font-size: 1.1rem; }
+  /* Golden reveal border. The fortune stays clear in the center. */
+  #card { isolation: isolate; min-height: 385px; padding-inline: clamp(36px, 5vw, 60px); }
+  .fortune-sparks { display: none; position: absolute; inset: 9px; z-index: -1; pointer-events: none; }
+  #card.revealing {
+    border-color: var(--ink);
+    box-shadow: 3px 5px 0 #3e2f2529, 0 12px 24px #47232d24;
+    background: var(--grain), radial-gradient(ellipse at 50% 45%, var(--cream) 35%, #f2ddb3 76%, var(--blush));
+  }
+  #card.revealing .fortune-sparks { display: block; }
+  #card.revealing :is(#symbol, #title, #message, #sign-note) { animation: fortune-arrive .55s ease-out both; }
+  #card.revealing #message { animation-delay: .10s; }
+  .fortune-sparks span {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: clamp(9px, var(--size), 27px);
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #edcd79, #c7852d 72%);
+    clip-path: polygon(47% 0, 62% 33%, 98% 36%, 74% 60%, 84% 95%, 51% 79%, 23% 100%, 23% 66%, 0 44%, 33% 35%);
+    transform: translate(-50%, -50%) rotate(var(--tilt));
+    opacity: .76;
+    animation: glisten 1.05s var(--lag) ease-in-out 3 backwards;
+  }
+  #card[data-motif="moon"] .fortune-sparks span:nth-child(3n + 1) {
+    clip-path: none;
+    border-radius: 50%;
+    mask: radial-gradient(circle at 77% 28%, transparent 47%, #000 50%);
+  }
+  #card[data-motif="wheel"] .fortune-sparks span:nth-child(3n + 1) {
+    clip-path: none;
+    border: 2px dotted #bd7618;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f5bf3e 22%, transparent 25%);
+  }
+  #card[data-motif="justice"] .fortune-sparks span:nth-child(odd) {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  #card[data-motif="lantern"] .fortune-sparks span:nth-child(even) {
+    clip-path: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff6b6 12%, #efab29 42%, transparent 70%);
+  }
+  @keyframes fortune-arrive {
+    from { opacity: 0; transform: translateY(10px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes glisten {
+    0%, 100% { opacity: .38; transform: translate(-50%, -50%) rotate(var(--tilt)) scale(.72); }
+    50% { opacity: 1; transform: translate(-50%, -50%) rotate(calc(var(--tilt) + 15deg)) scale(1.2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #card.revealing :is(#symbol, #title, #message, #sign-note), .fortune-sparks span { animation: none; }
+  }
+</style>
+<main>
+  <header class="reading-header">
+    <h1>A Little Fortune...</h1>
+    <p class="intro">Hold a question in mind. Set an intention, choose your zodiac sign, and pull a stamp⋆.˚ ☾⭒.˚</p>
+  </header>
+  <div class="reading-layout">
+    <form id="reading">
+      <fieldset class="intention">
+        <legend>What are you making room for today?</legend>
+        <div class="intention-options">
+          <label>
+            <input type="radio" name="intention" value="rest" required>
+            <span class="intention-window" aria-hidden="true">
+              <span class="intention-art" style="--art-x: 0%; --delay: 0s"></span>
+            </span>
+            <span class="intention-name">Rest</span>
+          </label>
+          <label>
+            <input type="radio" name="intention" value="change" required>
+            <span class="intention-window" aria-hidden="true">
+              <span class="intention-art" style="--art-x: 50%; --delay: -.8s"></span>
+            </span>
+            <span class="intention-name">Change</span>
+          </label>
+          <label>
+            <input type="radio" name="intention" value="clarity" required>
+            <span class="intention-window" aria-hidden="true">
+              <span class="intention-art" style="--art-x: 100%; --delay: -1.6s"></span>
+            </span>
+            <span class="intention-name">Clarity</span>
+          </label>
+        </div>
+      </fieldset>
+      <fieldset class="zodiac-deck">
+        <legend>What’s your zodiac sign?</legend>
+        <div class="zodiac-options">
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Aries" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 0%; --art-y: 0%; --delay: -0.00s"></span>
+            </span>
+            <span class="zodiac-name">Aries</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Taurus" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 33.33%; --art-y: 0%; --delay: -0.68s"></span>
+            </span>
+            <span class="zodiac-name">Taurus</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Gemini" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 66.67%; --art-y: 0%; --delay: -1.36s"></span>
+            </span>
+            <span class="zodiac-name">Gemini</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Cancer" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 100%; --art-y: 0%; --delay: -2.04s"></span>
+            </span>
+            <span class="zodiac-name">Cancer</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Leo" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 0%; --art-y: 50%; --delay: -2.72s"></span>
+            </span>
+            <span class="zodiac-name">Leo</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Virgo" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 33.33%; --art-y: 50%; --delay: -3.40s"></span>
+            </span>
+            <span class="zodiac-name">Virgo</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Libra" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 66.67%; --art-y: 50%; --delay: -0.00s"></span>
+            </span>
+            <span class="zodiac-name">Libra</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Scorpio" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 100%; --art-y: 50%; --delay: -0.68s"></span>
+            </span>
+            <span class="zodiac-name">Scorpio</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Sagittarius" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 0%; --art-y: 100%; --delay: -1.36s"></span>
+            </span>
+            <span class="zodiac-name">Sagittarius</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Capricorn" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 33.33%; --art-y: 100%; --delay: -2.04s"></span>
+            </span>
+            <span class="zodiac-name">Capricorn</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Aquarius" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 66.67%; --art-y: 100%; --delay: -2.72s"></span>
+            </span>
+            <span class="zodiac-name">Aquarius</span>
+          </label>
+          <label class="zodiac-option">
+            <input type="radio" name="zodiac" value="Pisces" required>
+            <span class="zodiac-window" aria-hidden="true">
+              <span class="zodiac-art" style="--art-x: 100%; --art-y: 100%; --delay: -3.40s"></span>
+            </span>
+            <span class="zodiac-name">Pisces</span>
+          </label>
+        </div>
+      </fieldset>
+      <fieldset class="symbol-deck">
+        <legend>Choose a symbol from the deck</legend>
+        <div class="symbol-options">
+          <label class="symbol-option">
+            <input type="radio" name="celestialSymbol" value="Moon" required>
+            <span class="deck-card deck-card--moon">
+              <span class="deck-art" aria-hidden="true">
+                <span class="deck-number">I</span>
+                <span class="deck-planet"></span>
+              </span>
+              <span class="deck-caption">Moon</span>
+            </span>
+          </label>
+          <label class="symbol-option">
+            <input type="radio" name="celestialSymbol" value="Jupiter" required>
+            <span class="deck-card deck-card--jupiter">
+              <span class="deck-art" aria-hidden="true">
+                <span class="deck-number">II</span>
+                <span class="deck-planet"></span>
+              </span>
+              <span class="deck-caption">Jupiter</span>
+            </span>
+          </label>
+          <label class="symbol-option">
+            <input type="radio" name="celestialSymbol" value="Saturn" required>
+            <span class="deck-card deck-card--saturn">
+              <span class="deck-art" aria-hidden="true">
+                <span class="deck-number">III</span>
+                <span class="deck-planet"></span>
+              </span>
+              <span class="deck-caption">Saturn</span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+      <button id="reveal" disabled>Reveal my card</button>
+    </form>
+    <section id="card" aria-live="polite" aria-atomic="true">
+      <div class="fortune-sparks" aria-hidden="true">
+        <span style="--x: 6%; --y: 10%; --size: calc(3.1vw + 4px); --tilt: -17deg; --lag: 0.00s"></span>
+        <span style="--x: 23%; --y: 6%; --size: calc(2.5vw + 4px); --tilt: 11deg; --lag: 0.21s"></span>
+        <span style="--x: 42%; --y: 9%; --size: calc(1.8vw + 4px); --tilt: -22deg; --lag: 0.42s"></span>
+        <span style="--x: 62%; --y: 6%; --size: calc(3.5vw + 4px); --tilt: 17deg; --lag: 0.63s"></span>
+        <span style="--x: 80%; --y: 9%; --size: calc(2.2vw + 4px); --tilt: -12deg; --lag: 0.07s"></span>
+        <span style="--x: 94%; --y: 7%; --size: calc(2.9vw + 4px); --tilt: 23deg; --lag: 0.28s"></span>
+        <span style="--x: 5%; --y: 29%; --size: calc(2.4vw + 4px); --tilt: 17deg; --lag: 0.49s"></span>
+        <span style="--x: 95%; --y: 27%; --size: calc(2.7vw + 4px); --tilt: -14deg; --lag: 0.70s"></span>
+        <span style="--x: 4%; --y: 49%; --size: calc(1.8vw + 4px); --tilt: -8deg; --lag: 0.14s"></span>
+        <span style="--x: 96%; --y: 46%; --size: calc(2.1vw + 4px); --tilt: 18deg; --lag: 0.35s"></span>
+        <span style="--x: 5%; --y: 70%; --size: calc(2.8vw + 4px); --tilt: 20deg; --lag: 0.56s"></span>
+        <span style="--x: 95%; --y: 68%; --size: calc(2.4vw + 4px); --tilt: -20deg; --lag: 0.00s"></span>
+        <span style="--x: 7%; --y: 91%; --size: calc(3.4vw + 4px); --tilt: -19deg; --lag: 0.21s"></span>
+        <span style="--x: 23%; --y: 95%; --size: calc(2vw + 4px); --tilt: 8deg; --lag: 0.42s"></span>
+        <span style="--x: 41%; --y: 91%; --size: calc(2.7vw + 4px); --tilt: -16deg; --lag: 0.63s"></span>
+        <span style="--x: 59%; --y: 94%; --size: calc(1.8vw + 4px); --tilt: 14deg; --lag: 0.07s"></span>
+        <span style="--x: 78%; --y: 91%; --size: calc(3.1vw + 4px); --tilt: 22deg; --lag: 0.28s"></span>
+        <span style="--x: 94%; --y: 94%; --size: calc(2.5vw + 4px); --tilt: -9deg; --lag: 0.49s"></span>
+      </div>
+      <div id="symbol" aria-hidden="true"></div>
+      <h2 id="title" hidden></h2>
+      <p id="message" hidden></p>
+      <p id="sign-note" hidden></p>
+    </section>
+  </div>
+</main>
+<script>
+  const zodiacAdvice = {
+    Aries: 'let your first impulse point the way, then give yourself a breath before you act.',
+    Taurus: 'start with something familiar that helps you feel at home.',
+    Gemini: 'say the thought out loud and listen for the part that surprises you.',
+    Cancer: 'give yourself the same care you would give someone close to you.',
+    Leo: 'make a little room for what makes you feel most like yourself.',
+    Virgo: 'pick one detail that would make today easier and let the rest wait.',
+    Libra: 'notice which choice gives you a little more breathing room.',
+    Scorpio: 'let yourself name the feeling you have been keeping private.',
+    Sagittarius: 'follow one small curiosity and see where it takes you.',
+    Capricorn: 'choose a step you can finish today and let it be enough.',
+    Aquarius: 'give an unusual idea a few minutes of your attention.',
+    Pisces: 'give your imagination a quiet place to wander.',
+  };
+
+  const fortuneMotifs = {
+    'The Moon': 'moon',
+    'Wheel of Fortune': 'wheel',
+    'Justice': 'justice',
+    'The Hermit': 'lantern'
+  };
+  const form = document.querySelector('#reading');
+  const reveal = document.querySelector('#reveal');
+  const card = document.querySelector('#card');
+  const cardTitle = document.querySelector('#title');
+  const cardMessage = document.querySelector('#message');
+
+  const signNote = document.querySelector('#sign-note');
+
+  let intention = '';
+  let zodiacSign = '';
+  let selectedSymbol = '';
+  let revealStatus = 'ready';
+  let timer;
+
+  function display(symbol, title, message) {
+    card.dataset.symbol = symbol;
+    cardTitle.textContent = title;
+    cardTitle.hidden = !title;
+    cardMessage.textContent = message;
+    cardMessage.hidden = !message;
+  }
+
+  function chooseFortune(intention, symbol) {
+    if (intention === 'rest' && symbol === 'Moon') {
+      return ['The Moon', 'Rest is on the cards. Tonight, let one question stay open.'];
+    }
+    if (intention === 'change' && symbol === 'Jupiter') {
+      return ['Wheel of Fortune', 'The odds favor a small change. Try one familiar thing a different way.'];
+    }
+    if (intention === 'clarity' && symbol === 'Saturn') {
+      return ['Justice', 'Clarity is within reach. Put one choice into words and see how it sounds.'];
+    }
+    if (intention === 'clarity') {
+      return ['The Star', 'The outlook is brighter. Give your attention to the one thing you already know.'];
+    }
+    if (intention === 'change') {
+      return ['The Hermit', 'Ask again after a quiet moment. A change may be easier to see when the day slows down.'];
+    }
+    return ['The Hermit', 'A quiet moment is in your future. Give yourself permission to take it.'];
+  }
+
+  function updateInputs() {
+    // Cancel the pending reveal whenever someone changes their reading.
+    clearTimeout(timer);
+    const data = new FormData(form);
+    intention = data.get('intention') || '';
+    zodiacSign = data.get('zodiac') || '';
+    selectedSymbol = data.get('celestialSymbol') || '';
+    revealStatus = 'ready';
+
+    reveal.disabled = !intention || !zodiacSign || !selectedSymbol;
+    signNote.hidden = true;
+    signNote.textContent = '';
+    card.classList.remove('revealing');
+    display(selectedSymbol, '', '');
+  }
+
+  form.addEventListener('change', updateInputs);
+  updateInputs();
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (revealStatus === 'waiting' || reveal.disabled || !form.reportValidity()) return;
+
+    revealStatus = 'waiting';
+    reveal.disabled = true;
+    card.classList.remove('revealing');
+
+    // Edit the waiting message here.
+    signNote.hidden = true;
+    display(selectedSymbol, `Turning over your ${selectedSymbol} card…`, 'Take a breath.');
+
+    timer = setTimeout(() => {
+      const [title, fortune] = chooseFortune(intention, selectedSymbol);
+      card.dataset.motif = fortuneMotifs[title] || 'stars';
+      display(selectedSymbol, title, fortune);
+      signNote.textContent = `${zodiacSign}, ${zodiacAdvice[zodiacSign]}`;
+      signNote.hidden = false;
+      card.classList.add('revealing');
+      revealStatus = 'revealed';
+      reveal.disabled = false;
+    }, 900);
+  });
+</script>
+</html>
